@@ -1,6 +1,6 @@
 # unity-rendering-investigation
 
-A basic performance investigation around a variety of rendering techniques within Unity
+A basic performance investigation around a variety of rendering techniques within Unity.
 
 ## Approaches
 ### Unity Renderer MonoBehaviour
