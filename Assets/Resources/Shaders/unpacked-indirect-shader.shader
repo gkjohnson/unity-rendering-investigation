@@ -1,4 +1,4 @@
-﻿Shader "Indirect Shader" {
+﻿Shader "Unpacked Indirect Shader" {
     
     Properties {
         _Color("Main Color", Color) = (1,1,0,1)
@@ -28,7 +28,6 @@
             uniform fixed4 _LightColor0;
             float4 _Color;
             
-            StructuredBuffer<int> indices;
             StructuredBuffer<Point> points;
 
             v2f vert(uint id : SV_VertexID, uint inst : SV_InstanceID)
@@ -36,9 +35,8 @@
                 v2f o;
 
                 // Position
-                int idx = indices[id];
-                float4 pos = float4(points[idx].vertex,1.0f);
-                float4 nor = float4(points[idx].normal, 1.0f);
+                float4 pos = float4(points[id].vertex,1.0f);
+                float4 nor = float4(points[id].normal, 1.0f);
                 o.pos = UnityObjectToClipPos(pos);
 
                 // Lighting
