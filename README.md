@@ -4,10 +4,10 @@ A basic performance investigation around a variety of rendering techniques withi
 
 ## Approaches
 #### Unity Renderer MonoBehaviour
-_TODO_
+Every mesh gets its own GameObject, MeshFilter, and Renderer components.
 
 #### Graphics.DrawMesh API
-_TODO_
+Transform matrices and materials are cached and all meshes are drawn using the `Graphics.DrawMesh()` function
 
 #### Graphics.DrawMesh API with MaterialPropertyBlock
 _TODO_
