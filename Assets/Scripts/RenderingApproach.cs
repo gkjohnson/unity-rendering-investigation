@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class RenderingApproach
@@ -114,7 +115,7 @@ public class DrawMeshWithPropBlockTest : RenderingApproach
     public override void Prepare(GameObject model)
     {
         List<DrawSet> drawList = new List<DrawSet>();
-        Shader shader = Shader.Find("Basic Shader");
+        Shader shader = Shader.Find("Basic Shader Per Renderer");
         _mat = new Material(shader);
 
         foreach (var r in model.GetComponentsInChildren<Renderer>())
