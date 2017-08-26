@@ -41,3 +41,12 @@ Same as above, but the attributes for the mesh are unpacked into a single _Compu
 Only pro might be that there is less array access in the vertex shader.
 
 This approach takes more memory and transforms more vertices.
+
+## Other Concepts
+### Single ComputeBuffer for All Meshes
+One compute buffer could be used to store all the attributes for all meshes with an offset buffer to help address a specific point in the attribute buffer to render. Multiple meshes could then be drawn by instancing and the instanceId can be used to address the specific mesh to draw.
+
+The biggest issue is that when using `DrawProcedura()`, you have to specify the amount of vertices, which means every mesh must be the same size.
+
+### Dynamic ComputeBuffer
+Decide which triangles should be drawn and generate the data for the compute buffer that will be drawn.
