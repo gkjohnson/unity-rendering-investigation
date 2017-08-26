@@ -34,4 +34,5 @@ sysinfo.txt
 *.unitypackage
 
 # Added
-/Assets/[Rr]esources/
+/Assets/Resources/Models/
+/Assets/Resources/Materials/
