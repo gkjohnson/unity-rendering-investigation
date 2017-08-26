@@ -7,6 +7,7 @@ public class Tester : MonoBehaviour {
         DRAW_MESH,
         DRAW_MESH_PROP_BLOCK,
         DRAW_PROCEDURAL,
+        UNPACKED_DRAW_PROCEDURAL,
         UNITY_RENDERER
     }
 
@@ -23,10 +24,11 @@ public class Tester : MonoBehaviour {
     float frametime = 0;
 
 	void Start () {
-        approaches[Approach.DRAW_MESH]              = new DrawMeshTest();
-        approaches[Approach.DRAW_MESH_PROP_BLOCK]   = new DrawMeshWithPropBlockTest();
-        approaches[Approach.DRAW_PROCEDURAL]        = new DrawProceduralTest();
-        approaches[Approach.UNITY_RENDERER]         = new RendererTest();
+        approaches[Approach.DRAW_MESH]                  = new DrawMeshTest();
+        approaches[Approach.DRAW_MESH_PROP_BLOCK]       = new DrawMeshWithPropBlockTest();
+        approaches[Approach.DRAW_PROCEDURAL]            = new DrawProceduralTest();
+        approaches[Approach.UNPACKED_DRAW_PROCEDURAL]   = new UnpackedDrawProceduralTest();
+        approaches[Approach.UNITY_RENDERER]             = new RendererTest();
 
         foreach (var kv in approaches) kv.Value.Prepare(testObj);
 

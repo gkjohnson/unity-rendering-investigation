@@ -156,22 +156,34 @@ public class DrawProceduralTest : RenderingApproach
         public ComputeBuffer idxsBuffer;
         public ComputeBuffer attrBuffer;
         public Matrix4x4 localMat;
+        public int count;
     }
 
     DrawSet[] drawArray;
-    
+
+    protected virtual void GetBuffers(Mesh mesh, ref ComputeBuffer idxbuff, ref ComputeBuffer attrbuff, ref int count)
+    {
+        ImportStructuredBufferMesh.Import(mesh, ref idxbuff, ref attrbuff);
+        count = idxbuff.count;
+    }
+
+    protected virtual Shader GetShader() {
+        return Shader.Find("Indirect Shader");
+    }
+
     public override void Prepare(GameObject model)
     {
         List<DrawSet> drawList = new List<DrawSet>();
-        Shader shader = Shader.Find("Indirect Shader");
+        Shader shader = GetShader();
         foreach (var r in model.GetComponentsInChildren<Renderer>())
         {
             MeshFilter mf = r.GetComponent<MeshFilter>();
             Mesh mesh = mf.sharedMesh;
             ComputeBuffer idxbuff = null;
             ComputeBuffer attrbuff = null;
-            ImportStructuredBufferMesh.Import(mesh, ref idxbuff, ref attrbuff);
-            Transform transform = r.transform;
+            int count = 0;
+
+            GetBuffers(mesh, ref idxbuff, ref attrbuff, ref count);
 
             Material mat = new Material(shader);
             mat.SetBuffer("indices", idxbuff);
@@ -183,7 +195,8 @@ public class DrawProceduralTest : RenderingApproach
                 material = mat,
                 idxsBuffer = idxbuff,
                 attrBuffer = attrbuff,
-                localMat = transform.localToWorldMatrix
+                count = count,
+                localMat = r.transform.localToWorldMatrix
             });
         }
 
@@ -198,7 +211,7 @@ public class DrawProceduralTest : RenderingApproach
             GL.PushMatrix();
             GL.MultMatrix(ds.localMat);
             ds.material.SetPass(0);
-            Graphics.DrawProcedural(MeshTopology.Triangles, ds.idxsBuffer.count, 1);
+            Graphics.DrawProcedural(MeshTopology.Triangles, ds.count, 1);
             GL.PopMatrix();
         }
     }
@@ -207,8 +220,25 @@ public class DrawProceduralTest : RenderingApproach
     {
         for (int i = 0; i < drawArray.Length; i++)
         {
-            drawArray[i].idxsBuffer.Dispose();
-            drawArray[i].attrBuffer.Dispose();
+            if(drawArray[i].idxsBuffer != null) drawArray[i].idxsBuffer.Dispose();
+            if(drawArray[i].attrBuffer != null) drawArray[i].attrBuffer.Dispose();
         }
+    }
+}
+
+// Use the Graphics.DrawProcedural API with separate
+// buffers for both the indices and attributes
+public class UnpackedDrawProceduralTest : DrawProceduralTest
+{
+    protected override void GetBuffers(Mesh mesh, ref ComputeBuffer idxbuff, ref ComputeBuffer attrbuff, ref int count)
+    {
+        idxbuff = null;
+        ImportStructuredBufferMesh.ImportAndUnpack(mesh, ref attrbuff);
+        count = attrbuff.count;
+    }
+
+    protected override Shader GetShader()
+    {
+        return Shader.Find("Unpacked Indirect Shader");
     }
 }
