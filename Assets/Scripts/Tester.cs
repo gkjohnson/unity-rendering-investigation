@@ -43,8 +43,8 @@ public class Tester : MonoBehaviour {
         {
             frameTimeout = DEFAULT_FRAME_TIMEOUT;
 
-            if(approaches[lastApproach] != null)    approaches[lastApproach].SetEnabled(false);
-            if(approaches[approach] != null)        approaches[approach].SetEnabled(true);
+            if(approaches.ContainsKey(lastApproach))    approaches[lastApproach].SetEnabled(false);
+            if(approaches.ContainsKey(approach))        approaches[approach].SetEnabled(true);
 
             lastApproach = approach;
 
@@ -68,4 +68,8 @@ public class Tester : MonoBehaviour {
         foreach (var kv in approaches) kv.Value.Dispose();
     }
 
+    private void OnGUI()
+    {
+        if (curr != null) curr.OnGUI();
+    }
 }

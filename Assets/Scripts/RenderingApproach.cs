@@ -261,6 +261,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
 
     ComputeBuffer offsetbuff, attrbuff, otherbuff;
     Material mat;
+    Material idmat;
     int totalMeshes = 0;
 
     public override void Prepare(GameObject model)
@@ -268,7 +269,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
         occam = new GameObject("OC Camera").AddComponent<Camera>();
         occam.enabled = false;
 
-        octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16);
+        octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16, RenderTextureFormat.ARGB32);
         octex.Create();
 
         List<Mesh> meshes = new List<Mesh>();
@@ -292,6 +293,11 @@ public class VisibleTriangleRenderTest : RenderingApproach
         mat.SetBuffer("offsets", offsetbuff);
         mat.SetBuffer("other", otherbuff);
         mat.SetBuffer("points", attrbuff);
+
+        idmat = new Material(Shader.Find("Indirect Shader Single Call Ids"));
+        idmat.SetBuffer("offsets", offsetbuff);
+        idmat.SetBuffer("other", otherbuff);
+        idmat.SetBuffer("points", attrbuff);
     }
 
     public override void Render(Camera cam = null, Transform root = null)
@@ -300,17 +306,17 @@ public class VisibleTriangleRenderTest : RenderingApproach
         occam.targetTexture = octex;
         occam.fieldOfView *= 1.5f;
 
-        // TODO: Dispatch pertriangle id render
         RenderTexture prev = RenderTexture.active;
         RenderTexture.active = octex;
 
-        mat.SetPass(0);
+        idmat.SetPass(0);
+        GL.Clear(true, true, new Color32(0, 0, 0, 0));
         Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
         // TODO: Dispatch visible triangle accumulation
 
         // Dispatch the full model
         RenderTexture.active = prev;
-        mat.SetPass(0);
+        idmat.SetPass(0);
         Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
     }
 
