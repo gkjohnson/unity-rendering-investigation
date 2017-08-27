@@ -42,11 +42,25 @@ Only pro might be that there is less array access in the vertex shader.
 
 This approach takes more memory and transforms more vertices.
 
+### Graphics.DrawProcedural with Visible Triangles Array (In Progress)
+Runs an occlusion pass, counts the triangles, generates an array of visible triangles, and renders only the visible triangles using DrawProcedural
+
+##### Details
+Requires a few compute shader and prepasses to run. These passes can be done over multiple frames:
+- Render whole model to buffer
+- Clear the "visible" array (this can possibly happen in the append buffer pass)
+- Mark triangles as "visible" in a buffer with a compute shader pass
+- Write the triangle ids needed to an append buffer in a compute shader pass
+
+More memory is required for the extra textures and buffers
+
+This limits the amount of triangles that have to be drawn to the primary buffer every frame to a minimal and possibly consistent count.
+
 ## Other Concepts
 ### Single ComputeBuffer for All Meshes
 One compute buffer could be used to store all the attributes for all meshes with an offset buffer to help address a specific point in the attribute buffer to render. Multiple meshes could then be drawn by instancing and the instanceId can be used to address the specific mesh to draw.
 
-The biggest issue is that when using `DrawProcedura()`, you have to specify the amount of vertices, which means every mesh must be the same size.
+The biggest issue is that when using `DrawProcedural()`, you have to specify the amount of vertices, which means every mesh must be the same size.
 
 ### Dynamic ComputeBuffer
 Decide which triangles should be drawn and generate the data for the compute buffer that will be drawn.
