@@ -17,7 +17,7 @@ public class Tester : MonoBehaviour {
     Approach lastApproach = Approach.UNITY_RENDERER;
 
     Dictionary<Approach, RenderingApproach> approaches = new Dictionary<Approach, RenderingApproach>();
-    RenderingApproach curr { get { return approaches[approach]; } }
+    RenderingApproach curr { get { return approaches.ContainsKey(approach) ? approaches[approach] : null; } }
 
     const int DEFAULT_FRAME_TIMEOUT = 20;
     int frameTimeout = DEFAULT_FRAME_TIMEOUT;

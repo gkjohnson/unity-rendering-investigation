@@ -316,7 +316,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
 
         // Dispatch the full model
         RenderTexture.active = prev;
-        idmat.SetPass(0);
+        mat.SetPass(0);
         Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
     }
 
