@@ -8,6 +8,7 @@ public class Tester : MonoBehaviour {
         DRAW_MESH_PROP_BLOCK,
         DRAW_PROCEDURAL,
         UNPACKED_DRAW_PROCEDURAL,
+        VISIBLE_TRIANGLES,
         UNITY_RENDERER
     }
 
@@ -28,6 +29,7 @@ public class Tester : MonoBehaviour {
         approaches[Approach.DRAW_MESH_PROP_BLOCK]       = new DrawMeshWithPropBlockTest();
         approaches[Approach.DRAW_PROCEDURAL]            = new DrawProceduralTest();
         approaches[Approach.UNPACKED_DRAW_PROCEDURAL]   = new UnpackedDrawProceduralTest();
+        approaches[Approach.VISIBLE_TRIANGLES]          = new VisibleTriangleRenderTest();
         approaches[Approach.UNITY_RENDERER]             = new RendererTest();
 
         foreach (var kv in approaches) kv.Value.Prepare(testObj);

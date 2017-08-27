@@ -244,3 +244,71 @@ public class UnpackedDrawProceduralTest : DrawProceduralTest
         return Shader.Find("Unpacked Indirect Shader");
     }
 }
+
+// Use the Graphics.DrawProcedural API with separate
+// buffers for both the indices and attributes
+public class VisibleTriangleRenderTest : RenderingApproach
+{
+    struct OtherAttrs
+    {
+        public Matrix4x4 matrix;
+        public Color color;
+    }
+
+    int OC_RESOLUTION = 1024;
+    RenderTexture octex;
+    Camera occam;
+
+    ComputeBuffer offsetbuff, attrbuff, otherbuff;
+    Material mat;
+    int totalMeshes = 0;
+
+    public override void Prepare(GameObject model)
+    {
+        occam = new GameObject().AddComponent<Camera>();
+        occam.enabled = false;
+
+        octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16);
+
+        List<Mesh> meshes = new List<Mesh>();
+        List<OtherAttrs> otherattrs = new List<OtherAttrs>();
+
+        foreach (var r in model.GetComponentsInChildren<Renderer>())
+        {
+            MeshFilter mf = r.GetComponent<MeshFilter>();
+            meshes.Add(mf.sharedMesh);
+            otherattrs.Add(new OtherAttrs(){
+                matrix = r.transform.localToWorldMatrix,
+                color = r.sharedMaterial.color
+            });
+        }
+
+        ImportStructuredBufferMesh.ImportAllAndUnpack(meshes.ToArray(), ref attrbuff, ref offsetbuff);
+        otherbuff = new ComputeBuffer(otherattrs.Count, Marshal.SizeOf(typeof(OtherAttrs)), ComputeBufferType.Default);
+        otherbuff.SetData(otherattrs.ToArray());
+
+        mat = new Material(Shader.Find("Indirect Shader Single Call"));
+        mat.SetBuffer("offsets", offsetbuff);
+        mat.SetBuffer("other", otherbuff);
+        mat.SetBuffer("points", attrbuff);
+    }
+
+    public override void Render(Camera cam = null, Transform root = null)
+    {
+        occam.CopyFrom(cam);
+        occam.targetTexture = octex;
+        occam.fieldOfView *= 1.5f;
+
+        // Dispatch the full model
+        mat.SetPass(0);
+        Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
+    }
+
+    public override void Dispose()
+    {
+        Object.Destroy(octex);
+        offsetbuff.Dispose();
+        attrbuff.Dispose();
+        otherbuff.Dispose();
+    }
+}
