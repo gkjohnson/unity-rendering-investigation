@@ -6,8 +6,9 @@ public abstract class RenderingApproach
 {
     virtual public void Prepare(GameObject model) { }
     virtual public void SetEnabled(bool enabled) { }
-    virtual public void Render(Transform root = null) { }
+    virtual public void Render(Camera cam = null, Transform root = null) { }
     virtual public void Dispose() { }
+    virtual public void OnGUI() { }
 }
 
 // Use the basic Unity Renderer component
@@ -89,7 +90,7 @@ public class DrawMeshTest : RenderingApproach
         _drawArray = drawList.ToArray();
     }
 
-    public override void Render(Transform root = null)
+    public override void Render(Camera cam = null, Transform root = null)
     {
         for(int i = 0; i < _drawArray.Length; i++)
         {
@@ -137,7 +138,7 @@ public class DrawMeshWithPropBlockTest : RenderingApproach
         _drawArray = drawList.ToArray();
     }
 
-    public override void Render(Transform root = null)
+    public override void Render(Camera cam = null, Transform root = null)
     {
         for (int i = 0; i < _drawArray.Length; i++)
         {
@@ -204,7 +205,7 @@ public class DrawProceduralTest : RenderingApproach
         drawArray = drawList.ToArray();
     }
 
-    public override void Render(Transform root = null)
+    public override void Render(Camera cam = null, Transform root = null)
     {
         for (int i = 0; i < drawArray.Length; i++)
         {

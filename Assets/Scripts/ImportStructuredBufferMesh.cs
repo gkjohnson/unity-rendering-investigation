@@ -7,6 +7,7 @@ public static class ImportStructuredBufferMesh {
 
     struct Point
     {
+        public short modelid;
         public Vector3 vertex;
         public Vector3 normal;
     }
@@ -59,14 +60,14 @@ public static class ImportStructuredBufferMesh {
     {
         uint[] offsets = new uint[meshes.Length];
         uint totalTriangles = 0;
-        for (int i = 0; i < meshes.Length; i++)
+        for (short i = 0; i < meshes.Length; i++)
         {
             offsets[i] = totalTriangles;
             totalTriangles += (uint)meshes[i].triangles.Length;
         }
 
         Point[] data = new Point[totalTriangles];
-        for (int i = 0; i < meshes.Length; i++)
+        for (short i = 0; i < meshes.Length; i++)
         {
             Mesh mesh = meshes[i];
             uint offset = offsets[i];
@@ -80,6 +81,7 @@ public static class ImportStructuredBufferMesh {
                 int idx = tris[j];
                 data[j + offset] = new Point()
                 {
+                    modelid = i,
                     vertex = verts[idx],
                     normal = norms[idx]
                 };

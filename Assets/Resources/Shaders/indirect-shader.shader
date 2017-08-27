@@ -16,6 +16,7 @@
             #pragma fragment frag
 
             struct Point {
+                half modelid;
                 float3 vertex;
                 float3 normal;
             };

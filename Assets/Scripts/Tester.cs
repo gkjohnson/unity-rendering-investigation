@@ -58,7 +58,7 @@ public class Tester : MonoBehaviour {
             Debug.Log("FPS: " + (1.0f / frametime).ToString("0.00000"));
         }
 
-        if (curr != null) curr.Render(transform);
+        if (curr != null) curr.Render(Camera.main, transform);
     }
 
     private void OnDestroy()
