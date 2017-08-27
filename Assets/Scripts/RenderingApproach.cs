@@ -265,10 +265,11 @@ public class VisibleTriangleRenderTest : RenderingApproach
 
     public override void Prepare(GameObject model)
     {
-        occam = new GameObject().AddComponent<Camera>();
+        occam = new GameObject("OC Camera").AddComponent<Camera>();
         occam.enabled = false;
 
         octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16);
+        octex.Create();
 
         List<Mesh> meshes = new List<Mesh>();
         List<OtherAttrs> otherattrs = new List<OtherAttrs>();
@@ -299,7 +300,16 @@ public class VisibleTriangleRenderTest : RenderingApproach
         occam.targetTexture = octex;
         occam.fieldOfView *= 1.5f;
 
+        // TODO: Dispatch pertriangle id render
+        RenderTexture prev = RenderTexture.active;
+        RenderTexture.active = octex;
+
+        mat.SetPass(0);
+        Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
+        // TODO: Dispatch visible triangle accumulation
+
         // Dispatch the full model
+        RenderTexture.active = prev;
         mat.SetPass(0);
         Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
     }
