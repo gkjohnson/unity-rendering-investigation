@@ -255,7 +255,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
         public Color color;
     }
 
-    int OC_RESOLUTION = 2048;
+    int OC_RESOLUTION = 1024;
     RenderTexture octex;
 
     const int ACCUM_KERNEL = 0;
@@ -264,6 +264,8 @@ public class VisibleTriangleRenderTest : RenderingApproach
     ComputeShader compute;
     ComputeBuffer idaccum, trilist;
     uint[] triarr;
+    int[] accumarr;
+    int nextTriIndex = 0;
 
     ComputeBuffer offsetbuff, attrbuff, otherbuff;
     Material mat;
@@ -297,6 +299,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
         idaccum = new ComputeBuffer(attrbuff.count / 3, Marshal.SizeOf(typeof(int)));
         trilist = new ComputeBuffer(350000, Marshal.SizeOf(typeof(uint)));
         triarr = new uint[350000];
+        accumarr = new int[attrbuff.count / 3];
 
         // Compute Shader
         compute = Resources.Load<ComputeShader>("Shaders/compute/countTris");
@@ -323,9 +326,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
         idmat.SetBuffer("offsets", offsetbuff);
         idmat.SetBuffer("other", otherbuff);
         idmat.SetBuffer("points", attrbuff);
-
-
-
+        
         Camera cam = new GameObject("CAM").AddComponent<Camera>();
         cam.targetTexture = octex;
         cam.enabled = false;
@@ -333,6 +334,9 @@ public class VisibleTriangleRenderTest : RenderingApproach
 
     public override void Render(Camera cam = null, Transform root = null)
     {
+        // TODO: Do this part over multiple frames
+        // TODO: Tri to generate the triangle list on
+        // the GPU, too, to avoid transfers
         if (Camera.current == Camera.main)
         {
             RenderTexture prev = RenderTexture.active;
@@ -349,30 +353,25 @@ public class VisibleTriangleRenderTest : RenderingApproach
             //trilist.SetCounterValue(0);
             //compute.Dispatch(CLEAR_KERNEL, idaccum.count, 1, 1);
 
-            int[] arr = new int[idaccum.count];
-            idaccum.GetData(arr);
-
-            int lastitem = 0;
-            for (uint i = 0; i < arr.Length; i++)
+            idaccum.GetData(accumarr);
+            nextTriIndex = 0;
+            for (uint i = 0; i < accumarr.Length && nextTriIndex < triarr.Length; i++)
             {
-
-                if (arr[i] != 0)
+                if (accumarr[i] != 0)
                 {
-                    triarr[lastitem] = i;
-                    lastitem++;
+                    triarr[nextTriIndex] = i;
+                    nextTriIndex++;
                 }
             }
 
-            Debug.Log(lastitem);
-            trilist.SetData(triarr);
-            // TODO: Dispatch visible triangle accumulation
+            trilist.SetData(triarr, 0, 0, nextTriIndex);
 
-            // Dispatch the full model
+            // reset the render texture
             RenderTexture.active = prev;
         }
 
         mat.SetPass(0);
-        Graphics.DrawProcedural(MeshTopology.Triangles, triarr.Length * 3, 1);
+        Graphics.DrawProcedural(MeshTopology.Triangles, nextTriIndex * 3, 1);
     }
 
     public override void Dispose()
