@@ -255,7 +255,8 @@ public class VisibleTriangleRenderTest : RenderingApproach
         public Color color;
     }
 
-    int OC_RESOLUTION = 1024;
+    const int OC_RESOLUTION = 1024;
+    const int MAX_TRIANGLES = 100000;
     RenderTexture octex;
 
     const int ACCUM_KERNEL = 0;
@@ -297,8 +298,8 @@ public class VisibleTriangleRenderTest : RenderingApproach
 
         // Compute Shader Buffers
         idaccum = new ComputeBuffer(attrbuff.count / 3, Marshal.SizeOf(typeof(int)));
-        trilist = new ComputeBuffer(350000, Marshal.SizeOf(typeof(uint)));
-        triarr = new uint[350000];
+        trilist = new ComputeBuffer(MAX_TRIANGLES, Marshal.SizeOf(typeof(uint)));
+        triarr = new uint[MAX_TRIANGLES];
         accumarr = new int[attrbuff.count / 3];
 
         // Compute Shader
@@ -337,7 +338,9 @@ public class VisibleTriangleRenderTest : RenderingApproach
         // TODO: Do this part over multiple frames
         // TODO: Tri to generate the triangle list on
         // the GPU, too, to avoid transfers
-        if (Camera.current == Camera.main)
+        // TODO: Dispatch multiple threads to better use
+        // compute shader
+        if (Camera.current == Camera.main && Time.frameCount % 10 == 0)
         {
             RenderTexture prev = RenderTexture.active;
             RenderTexture.active = octex;
@@ -363,7 +366,6 @@ public class VisibleTriangleRenderTest : RenderingApproach
                     nextTriIndex++;
                 }
             }
-
             trilist.SetData(triarr, 0, 0, nextTriIndex);
 
             // reset the render texture
