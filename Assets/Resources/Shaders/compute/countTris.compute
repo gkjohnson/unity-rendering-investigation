@@ -1,5 +1,6 @@
-﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+﻿#pragma kernel AccumulateTriangles
+#pragma kernel ClearAccum
+#pragma kernel MapTris
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
@@ -13,11 +14,41 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 	Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
 }
 
+RWTexture2D<float4> _idTex;
+RWStructuredBuffer<int> _idaccum;
+AppendStructuredBuffer<uint> _trilist;
 
-// TODO: Build kernel to increment / count the triangles in an 
-// id rendertexture and set a (bool or byte?) buffer per triangle id
+// kernel to increment / count the triangles ids in the
+// id rendertexture and set a buffer per triangle id
+[numthreads(1, 1, 1)]
+void AccumulateTriangles(uint3 id : SV_DispatchThreadID)
+{
+    float4 px = _idTex[id.xy];
+    int index = 
+        (((int)(px.x * 255) & 0xFF) << 0) |
+        (((int)(px.y * 255) & 0xFF) << 8) |
+        (((int)(px.z * 255) & 0xFF) << 16) |
+        (((int)(px.w * 255) & 0xFF) << 24);
 
-// TODO: Build a kernel to quickly clear / reset the above buffer to 0 / false
+    _idaccum[index] = 1;
+}
 
-// TODO: Build a kernel to append to an array to draw triangles. Appends IF
-// the triangle index count is > 0
+// kernel to quickly clear / reset the above buffer to 0 / false
+[numthreads(1, 1, 1)]
+void ClearAccum(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x + id.y + id.z;
+    _idaccum[index] = 0;
+}
+
+// Accumulate a list of 
+[numthreads(1, 1, 1)]
+void MapTris(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x + id.y + id.z;
+    int val = _idaccum[index];
+
+    if (val != 0) _trilist.Append(index);
+
+    _idaccum[index] = 0;
+}

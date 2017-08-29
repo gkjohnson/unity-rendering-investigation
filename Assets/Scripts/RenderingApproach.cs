@@ -255,21 +255,24 @@ public class VisibleTriangleRenderTest : RenderingApproach
         public Color color;
     }
 
-    int OC_RESOLUTION = 1024;
+    int OC_RESOLUTION = 2048;
     RenderTexture octex;
-    Camera occam;
+
+    const int ACCUM_KERNEL = 0;
+    const int CLEAR_KERNEL = 1;
+    const int MAP_KERNEL = 2;
+    ComputeShader compute;
+    ComputeBuffer idaccum, trilist;
+    uint[] triarr;
 
     ComputeBuffer offsetbuff, attrbuff, otherbuff;
     Material mat;
     Material idmat;
-    int totalMeshes = 0;
 
     public override void Prepare(GameObject model)
     {
-        occam = new GameObject("OC Camera").AddComponent<Camera>();
-        occam.enabled = false;
-
         octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16, RenderTextureFormat.ARGB32);
+        octex.enableRandomWrite = true;
         octex.Create();
 
         List<Mesh> meshes = new List<Mesh>();
@@ -285,39 +288,91 @@ public class VisibleTriangleRenderTest : RenderingApproach
             });
         }
 
+        // Triangle buffers
         ImportStructuredBufferMesh.ImportAllAndUnpack(meshes.ToArray(), ref attrbuff, ref offsetbuff);
         otherbuff = new ComputeBuffer(otherattrs.Count, Marshal.SizeOf(typeof(OtherAttrs)), ComputeBufferType.Default);
         otherbuff.SetData(otherattrs.ToArray());
 
+        // Compute Shader Buffers
+        idaccum = new ComputeBuffer(attrbuff.count / 3, Marshal.SizeOf(typeof(int)));
+        trilist = new ComputeBuffer(350000, Marshal.SizeOf(typeof(uint)));
+        triarr = new uint[350000];
+
+        // Compute Shader
+        compute = Resources.Load<ComputeShader>("Shaders/compute/countTris");
+        
+        compute.SetBuffer(ACCUM_KERNEL, "_idaccum", idaccum);
+        compute.SetTexture(ACCUM_KERNEL, "_idTex", octex);
+
+        compute.SetBuffer(CLEAR_KERNEL, "_idaccum", idaccum);
+
+        compute.SetBuffer(MAP_KERNEL, "_idaccum", idaccum);
+        compute.SetTexture(MAP_KERNEL, "_idTex", octex);
+
+        compute.Dispatch(CLEAR_KERNEL, idaccum.count, 1, 1);
+
+
+        // Material
         mat = new Material(Shader.Find("Indirect Shader Single Call"));
         mat.SetBuffer("offsets", offsetbuff);
         mat.SetBuffer("other", otherbuff);
         mat.SetBuffer("points", attrbuff);
+        mat.SetBuffer("trilist", trilist);
 
         idmat = new Material(Shader.Find("Indirect Shader Single Call Ids"));
         idmat.SetBuffer("offsets", offsetbuff);
         idmat.SetBuffer("other", otherbuff);
         idmat.SetBuffer("points", attrbuff);
+
+
+
+        Camera cam = new GameObject("CAM").AddComponent<Camera>();
+        cam.targetTexture = octex;
+        cam.enabled = false;
     }
 
     public override void Render(Camera cam = null, Transform root = null)
     {
-        occam.CopyFrom(cam);
-        occam.targetTexture = octex;
-        occam.fieldOfView *= 1.5f;
+        if (Camera.current == Camera.main)
+        {
+            RenderTexture prev = RenderTexture.active;
+            RenderTexture.active = octex;
 
-        RenderTexture prev = RenderTexture.active;
-        RenderTexture.active = octex;
+            idmat.SetPass(0);
+            GL.Clear(true, true, new Color32(0, 0, 0, 0));
+            Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
 
-        idmat.SetPass(0);
-        GL.Clear(true, true, new Color32(0, 0, 0, 0));
-        Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
-        // TODO: Dispatch visible triangle accumulation
+            // accumulate the ids
+            compute.Dispatch(CLEAR_KERNEL, idaccum.count, 1, 1);
+            compute.Dispatch(ACCUM_KERNEL, octex.width, octex.height, 1);
 
-        // Dispatch the full model
-        RenderTexture.active = prev;
+            //trilist.SetCounterValue(0);
+            //compute.Dispatch(CLEAR_KERNEL, idaccum.count, 1, 1);
+
+            int[] arr = new int[idaccum.count];
+            idaccum.GetData(arr);
+
+            int lastitem = 0;
+            for (uint i = 0; i < arr.Length; i++)
+            {
+
+                if (arr[i] != 0)
+                {
+                    triarr[lastitem] = i;
+                    lastitem++;
+                }
+            }
+
+            Debug.Log(lastitem);
+            trilist.SetData(triarr);
+            // TODO: Dispatch visible triangle accumulation
+
+            // Dispatch the full model
+            RenderTexture.active = prev;
+        }
+
         mat.SetPass(0);
-        Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
+        Graphics.DrawProcedural(MeshTopology.Triangles, triarr.Length * 3, 1);
     }
 
     public override void Dispose()
@@ -326,5 +381,8 @@ public class VisibleTriangleRenderTest : RenderingApproach
         offsetbuff.Dispose();
         attrbuff.Dispose();
         otherbuff.Dispose();
+
+        trilist.Dispose();
+        idaccum.Dispose();
     }
 }
