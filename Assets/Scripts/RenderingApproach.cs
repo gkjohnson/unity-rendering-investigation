@@ -345,15 +345,22 @@ public class VisibleTriangleRenderTest : RenderingApproach
 
     IEnumerator GatherTriangles()
     {
-
-        // TODO: Do this part over multiple frames
         // TODO: Tri to generate the triangle list on
         // the GPU, too, to avoid transfers
         // TODO: Dispatch multiple threads to better use
         // compute shader
+        // TODO: On particularly large models iterating over
+        // the texture is simpler than iterating over
+        // every triangle id 1024 * 1024 ~= 1000000, so models
+        // will less geometry are more expensive to iterate over
+        // The data may be more expensive to transfer, though
+        // TODO: Use shorts or something smaller
+        // TODO: There's a triangle marked as id "0" which will never
+        // be drawn because we don't add the 0 index to the triangle
+        // array because it's the background color. We should 1-index
+        // the triangles or make the background white with full alpha
         while (true)
         {
-
             // Render the OC frame
             occam.CopyFrom(Camera.main);
             occam.fieldOfView *= 1.25f;
@@ -371,35 +378,60 @@ public class VisibleTriangleRenderTest : RenderingApproach
             Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
             
             GL.PopMatrix();
-            
+            RenderTexture.active = prev;
+
             // accumulate the ids
             compute.Dispatch(CLEAR_KERNEL, idaccum.count, 1, 1);
             compute.Dispatch(ACCUM_KERNEL, octex.width, octex.height, 1);
 
+            // TODO: Use an appened buffer to build the triangle id
+            // array on the fly
             //trilist.SetCounterValue(0);
             //compute.Dispatch(CLEAR_KERNEL, idaccum.count, 1, 1);
 
-            idaccum.GetData(accumarr);
-            nextTriIndex = 0;
-            for (uint i = 0; i < accumarr.Length && nextTriIndex < triarr.Length; i++)
+            // Wait for the compute shader to complete
+            yield return null;
+            yield return null;
+
+            // Copy the ids from the GPU
+            // TODO: Unity synchronously does this, which is bad
+            int STEP = accumarr.Length;
+            for (int i = 0; i < accumarr.Length; i += STEP)
+            {
+                idaccum.GetData(accumarr, i, i, Mathf.Min(STEP, accumarr.Length - i));
+                yield return null;
+            }
+
+            // Push the discovered triangle ids on to
+            int newTriIndex = 0;
+            int stride = accumarr.Length / 10;
+            for (uint i = 0; i < accumarr.Length && newTriIndex < triarr.Length; i++)
             {
                 if (accumarr[i] != 0)
                 {
-                    triarr[nextTriIndex] = i;
-                    nextTriIndex++;
+                    triarr[newTriIndex] = i;
+                    newTriIndex++;
+                }
+
+                if (i % stride == 0 && i != 0)
+                {
+                    yield return null;
+                    
+                    // This will progressively add the new ids
+                    // to be rendered the shader as they are discovered
+                    // but can result in pieces being lost and flickering
+                    // in and out of view
+
+                    // trilist.SetData(triarr, 0, 0, newTriIndex);
+                    // nextTriIndex = nextTriIndex > newTriIndex ? nextTriIndex : newTriIndex;
                 }
             }
+
+            nextTriIndex = newTriIndex;            
             trilist.SetData(triarr, 0, 0, nextTriIndex);
-
-            // reset the render texture
-            RenderTexture.active = prev;
-
-            yield return null;
         }
     }
-
-
-
+    
     public override void Render(Camera cam = null, Transform root = null)
     {
         mat.SetPass(0);

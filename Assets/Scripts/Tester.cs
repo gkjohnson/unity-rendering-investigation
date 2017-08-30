@@ -33,18 +33,19 @@ public class Tester : MonoBehaviour {
         approaches[Approach.UNITY_RENDERER]             = new RendererTest();
 
         foreach (var kv in approaches) kv.Value.Prepare(testObj);
-
-        approaches[approach].SetEnabled(true);
 	}
 
-    void OnRenderObject()
+    private void Update()
     {
-        if(approach != lastApproach)
+        //if (Camera.current != Camera.main) return;
+
+        // Debug.Log("COUNT: " + Time.frameCount + " : " + Camera.current);
+        if (approach != lastApproach)
         {
             frameTimeout = DEFAULT_FRAME_TIMEOUT;
 
-            if(approaches.ContainsKey(lastApproach))    approaches[lastApproach].SetEnabled(false);
-            if(approaches.ContainsKey(approach))        approaches[approach].SetEnabled(true);
+            if (approaches.ContainsKey(lastApproach)) approaches[lastApproach].SetEnabled(false);
+            if (approaches.ContainsKey(approach)) approaches[approach].SetEnabled(true);
 
             lastApproach = approach;
 
@@ -53,13 +54,16 @@ public class Tester : MonoBehaviour {
         }
         
         frameTimeout--;
-        if(frameTimeout < 0)
+        if (frameTimeout < 0)
         {
             frames++;
             frametime += (Time.deltaTime - frametime) / frames;
-            Debug.Log("FPS: " + (1.0f / frametime).ToString("0.00000"));
+            Debug.Log("FPS: " + (1.0f / frametime).ToString("0.00000") + " - " + (1.0f / Time.deltaTime).ToString("0.00000"));
         }
+    }
 
+    void OnRenderObject()
+    {
         if (curr != null) curr.Render(Camera.main, transform);
     }
 
