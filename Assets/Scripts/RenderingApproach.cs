@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Collections;
 
 public abstract class RenderingApproach
 {
@@ -272,6 +273,8 @@ public class VisibleTriangleRenderTest : RenderingApproach
     Material mat;
     Material idmat;
 
+    Coroutine routine = null;
+
     public override void Prepare(GameObject model)
     {
         octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16, RenderTextureFormat.ARGB32);
@@ -333,22 +336,39 @@ public class VisibleTriangleRenderTest : RenderingApproach
         cam.enabled = false;
     }
 
-    public override void Render(Camera cam = null, Transform root = null)
+    public override void SetEnabled(bool enabled)
     {
+        if (enabled) routine = StaticCoroutine.StaticStartCoroutine(GatherTriangles());
+        else StaticCoroutine.StaticStopCoroutine(routine);
+    }
+
+    IEnumerator GatherTriangles()
+    {
+
         // TODO: Do this part over multiple frames
         // TODO: Tri to generate the triangle list on
         // the GPU, too, to avoid transfers
         // TODO: Dispatch multiple threads to better use
         // compute shader
-        if (Camera.current == Camera.main && Time.frameCount % 10 == 0)
+        while (true)
         {
             RenderTexture prev = RenderTexture.active;
             RenderTexture.active = octex;
+            GL.Clear(true, true, new Color32(0, 0, 0, 0));
+
+            GL.PushMatrix();
+
+            GL.LoadIdentity();
+            GL.modelview = Camera.main.worldToCameraMatrix;
+
+            GL.LoadProjectionMatrix(Camera.main.projectionMatrix);
+            
 
             idmat.SetPass(0);
-            GL.Clear(true, true, new Color32(0, 0, 0, 0));
             Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
 
+
+            GL.PopMatrix();
             // accumulate the ids
             compute.Dispatch(CLEAR_KERNEL, idaccum.count, 1, 1);
             compute.Dispatch(ACCUM_KERNEL, octex.width, octex.height, 1);
@@ -370,8 +390,15 @@ public class VisibleTriangleRenderTest : RenderingApproach
 
             // reset the render texture
             RenderTexture.active = prev;
-        }
 
+            yield return null;
+        }
+    }
+
+
+
+    public override void Render(Camera cam = null, Transform root = null)
+    {
         mat.SetPass(0);
         Graphics.DrawProcedural(MeshTopology.Triangles, nextTriIndex * 3, 1);
     }
