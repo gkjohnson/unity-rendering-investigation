@@ -259,6 +259,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
     const int OC_RESOLUTION = 1024;
     const int MAX_TRIANGLES = 100000;
     RenderTexture octex;
+    Camera occam;
 
     const int ACCUM_KERNEL = 0;
     const int CLEAR_KERNEL = 1;
@@ -331,9 +332,9 @@ public class VisibleTriangleRenderTest : RenderingApproach
         idmat.SetBuffer("other", otherbuff);
         idmat.SetBuffer("points", attrbuff);
         
-        Camera cam = new GameObject("CAM").AddComponent<Camera>();
-        cam.targetTexture = octex;
-        cam.enabled = false;
+        occam = new GameObject("OC CAM").AddComponent<Camera>();
+        occam.targetTexture = octex;
+        occam.enabled = false;
     }
 
     public override void SetEnabled(bool enabled)
@@ -352,23 +353,25 @@ public class VisibleTriangleRenderTest : RenderingApproach
         // compute shader
         while (true)
         {
+
+            // Render the OC frame
+            occam.CopyFrom(Camera.main);
+            occam.fieldOfView *= 1.25f;
+
             RenderTexture prev = RenderTexture.active;
             RenderTexture.active = octex;
             GL.Clear(true, true, new Color32(0, 0, 0, 0));
-
+       
             GL.PushMatrix();
-
             GL.LoadIdentity();
-            GL.modelview = Camera.main.worldToCameraMatrix;
-
-            GL.LoadProjectionMatrix(Camera.main.projectionMatrix);
+            GL.modelview = occam.worldToCameraMatrix;
+            GL.LoadProjectionMatrix(occam.projectionMatrix);
             
-
             idmat.SetPass(0);
             Graphics.DrawProcedural(MeshTopology.Triangles, attrbuff.count, 1);
-
-
+            
             GL.PopMatrix();
+            
             // accumulate the ids
             compute.Dispatch(CLEAR_KERNEL, idaccum.count, 1, 1);
             compute.Dispatch(ACCUM_KERNEL, octex.width, octex.height, 1);
