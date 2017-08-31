@@ -394,7 +394,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
             yield return null;
 
             // Copy the ids from the GPU
-            // TODO: Unity synchronously does this, which is bad
+            // TODO: Unity does this synchronously, which is bad
             int STEP = accumarr.Length;
             for (int i = 0; i < accumarr.Length; i += STEP)
             {
