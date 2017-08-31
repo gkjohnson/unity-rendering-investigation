@@ -42,8 +42,8 @@ Only pro might be that there is less array access in the vertex shader.
 
 This approach takes more memory and transforms more vertices.
 
-## Graphics.DrawProcedural with Visible Triangles Array (In Progress)
-Runs an occlusion pass, counts the triangles, generates an array of visible triangles, and renders only the visible triangles using DrawProcedural
+## Graphics.DrawProcedural with Visible Triangles Array
+Runs an occlusion pass, counts the triangles, generates an array of visible triangles, and renders only the visible triangles using DrawProcedural.
 
 ### Details
 Requires a few compute shader and prepasses to run. These passes can be done over multiple frames:
@@ -52,9 +52,11 @@ Requires a few compute shader and prepasses to run. These passes can be done ove
 - Mark triangles as "visible" in a buffer with a compute shader pass
 - Write the triangle ids needed to an append buffer in a compute shader pass
 
-More memory is required for the extra textures and buffers
+More memory is required for the extra textures and buffers.
 
 This limits the amount of triangles that have to be drawn to the primary buffer every frame to a minimal and possibly consistent count.
+
+Moving a mesh requires updating a buffer with the model attributes.
 
 # Other Concepts
 ## Single ComputeBuffer for All Meshes
