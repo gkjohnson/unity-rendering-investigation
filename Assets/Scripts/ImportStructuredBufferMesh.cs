@@ -56,7 +56,7 @@ public static class ImportStructuredBufferMesh {
         attr.SetData(data);
     }
 
-    public static void ImportAllAndUnpack(Mesh[] meshes, ref ComputeBuffer attrbuff, ref ComputeBuffer offsetbuff)
+    public static void ImportAllAndUnpack(Mesh[] meshes, ref ComputeBuffer attrbuff)
     {
         uint[] offsets = new uint[meshes.Length];
         uint totalTriangles = 0;
@@ -87,9 +87,6 @@ public static class ImportStructuredBufferMesh {
                 };
             }
         }
-
-        offsetbuff = new ComputeBuffer(data.Length, Marshal.SizeOf(typeof(uint)), ComputeBufferType.Default);
-        offsetbuff.SetData(offsets);
 
         attrbuff = new ComputeBuffer(data.Length, Marshal.SizeOf(typeof(Point)), ComputeBufferType.Default);
         attrbuff.SetData(data);

@@ -31,7 +31,6 @@
 
             uniform fixed4 _LightColor0;
             
-            StructuredBuffer<uint> offsets;
             StructuredBuffer<Other> other;
             StructuredBuffer<Point> points;
 
@@ -42,7 +41,6 @@
                 // Position
                 int idx = id;
                 int modelid = points[idx].modelid;
-                idx = id;
                 float4 pos = float4(points[idx].vertex,1.0f);
                 float4 nor = float4(points[idx].normal, 1.0f);
                 float4x4 mat = other[modelid].mat;

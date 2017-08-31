@@ -270,7 +270,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
     int[] accumarr;
     int nextTriIndex = 0;
 
-    ComputeBuffer offsetbuff, attrbuff, otherbuff;
+    ComputeBuffer attrbuff, otherbuff;
     Material mat;
     Material idmat;
 
@@ -279,7 +279,6 @@ public class VisibleTriangleRenderTest : RenderingApproach
     public override void Prepare(GameObject model)
     {
         octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16, RenderTextureFormat.ARGB32);
-        octex.enableRandomWrite = true;
         octex.Create();
 
         List<Mesh> meshes = new List<Mesh>();
@@ -296,7 +295,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
         }
 
         // Triangle buffers
-        ImportStructuredBufferMesh.ImportAllAndUnpack(meshes.ToArray(), ref attrbuff, ref offsetbuff);
+        ImportStructuredBufferMesh.ImportAllAndUnpack(meshes.ToArray(), ref attrbuff);
         otherbuff = new ComputeBuffer(otherattrs.Count, Marshal.SizeOf(typeof(OtherAttrs)), ComputeBufferType.Default);
         otherbuff.SetData(otherattrs.ToArray());
 
@@ -322,13 +321,11 @@ public class VisibleTriangleRenderTest : RenderingApproach
 
         // Material
         mat = new Material(Shader.Find("Indirect Shader Single Call"));
-        mat.SetBuffer("offsets", offsetbuff);
         mat.SetBuffer("other", otherbuff);
         mat.SetBuffer("points", attrbuff);
         mat.SetBuffer("trilist", trilist);
 
         idmat = new Material(Shader.Find("Indirect Shader Single Call Ids"));
-        idmat.SetBuffer("offsets", offsetbuff);
         idmat.SetBuffer("other", otherbuff);
         idmat.SetBuffer("points", attrbuff);
         
@@ -441,7 +438,6 @@ public class VisibleTriangleRenderTest : RenderingApproach
     public override void Dispose()
     {
         Object.Destroy(octex);
-        offsetbuff.Dispose();
         attrbuff.Dispose();
         otherbuff.Dispose();
 

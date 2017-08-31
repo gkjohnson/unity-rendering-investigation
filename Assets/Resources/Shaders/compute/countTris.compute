@@ -2,7 +2,7 @@
 #pragma kernel ClearAccum
 #pragma kernel MapTris
 
-RWTexture2D<float4> _idTex;
+Texture2D<float4> _idTex;
 RWStructuredBuffer<int> _idaccum;
 AppendStructuredBuffer<uint> _trilist;
 
