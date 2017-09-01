@@ -279,6 +279,13 @@ public class VisibleTriangleRenderTest : RenderingApproach
 
     public override void Prepare(GameObject model)
     {
+        // OC camera and rendertexture
+        occam = new GameObject("OC CAM").AddComponent<Camera>();
+        occam.targetTexture = octex;
+        occam.enabled = false;
+        octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16, RenderTextureFormat.ARGB32);
+        octex.Create();
+
         // Collect the mesh and attribute buffers
         List<Mesh> meshes = new List<Mesh>();
         List<OtherAttrs> otherattrs = new List<OtherAttrs>();
@@ -319,13 +326,6 @@ public class VisibleTriangleRenderTest : RenderingApproach
         idmat = new Material(Shader.Find("Indirect Shader Single Call Ids"));
         idmat.SetBuffer("other", otherbuff);
         idmat.SetBuffer("points", attrbuff);
-        
-        // OC camera and rendertexture
-        occam = new GameObject("OC CAM").AddComponent<Camera>();
-        occam.targetTexture = octex;
-        occam.enabled = false;
-        octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16, RenderTextureFormat.ARGB32);
-        octex.Create();
     }
 
     public override void SetEnabled(bool enabled)
