@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using UnityEngine;
 
+// Static helper class to enable anything to use Unity's
+// Monobehaviour coroutines
 public class StaticCoroutine : MonoBehaviour {
     static StaticCoroutine _instance = null;
-    static StaticCoroutine instance {
+    static StaticCoroutine instance
+    {
         get {
             return _instance = _instance ?? new GameObject().AddComponent<StaticCoroutine>();
         }
