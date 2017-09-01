@@ -4,7 +4,7 @@
 
 Texture2D<float4> _idTex;
 RWStructuredBuffer<int> _idaccum;
-AppendStructuredBuffer<uint> _trilist;
+AppendStructuredBuffer<uint> _triappend;
 
 // kernel to increment / count the triangles ids in the
 // id rendertexture and set a buffer per triangle id
@@ -33,10 +33,10 @@ void ClearAccum(uint3 id : SV_DispatchThreadID)
 [numthreads(1, 1, 1)]
 void MapTris(uint3 id : SV_DispatchThreadID)
 {
-    uint index = id.x + id.y + id.z;
+    uint index = id.x;// +id.y + id.z;
     int val = _idaccum[index];
 
-    if (val != 0) _trilist.Append(index);
+    if (val != 0) _triappend.Append(id.x);
 
     _idaccum[index] = 0;
 }

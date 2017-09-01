@@ -33,13 +33,14 @@
             
             StructuredBuffer<Other> other;
             StructuredBuffer<Point> points;
+            int idOffset = 0;
 
             v2f vert(uint id : SV_VertexID, uint inst : SV_InstanceID)
             {
                 v2f o;
 
                 // Position
-                int idx = id;
+                int idx = id + (int)idOffset;
                 int modelid = points[idx].modelid;
                 float4 pos = float4(points[idx].vertex,1.0f);
                 float4 nor = float4(points[idx].normal, 1.0f);
@@ -47,7 +48,7 @@
 
                 o.pos = mul(UNITY_MATRIX_VP, mul(mat, pos));
                 
-                id = floor(id / 3);
+                id = floor(idx / 3);
                 o.id = float4(
                     ((id >> 0) & 0xFF) / 255.0,
                     ((id >> 8) & 0xFF) / 255.0,
