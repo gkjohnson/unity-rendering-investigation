@@ -259,7 +259,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
     // Render constants
     const int OC_RESOLUTION = 1024;     // OC Texture Resolution
     const int OC_RENDER_FRAMES = 5;     // Number of frames to render the OC over
-    const float OC_FOV_RATIO = 1.5f;    // FOV ratio for the OC render camera
+    const float OC_FOV_RATIO = 1.25f;    // FOV ratio for the OC render camera
     const int MAX_TRIANGLES = 350000;   // Number of triangles to render per frame
 
     // Compute Shader Kernels
@@ -363,7 +363,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
                 RenderTexture.active = octex;
                 if (i == 0)
                 {
-                    GL.Clear(true, true, new Color32(0, 0, 0, 0));
+                    GL.Clear(true, true, new Color32(0xFF, 0xFF, 0xFF, 0xFF));
                 }
 
                 GL.PushMatrix();

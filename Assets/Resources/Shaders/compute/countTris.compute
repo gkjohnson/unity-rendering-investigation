@@ -11,13 +11,13 @@ AppendStructuredBuffer<uint> _triappend;
 void AccumulateTriangles(uint3 id : SV_DispatchThreadID)
 {
     float4 px = _idTex[id.xy];
-    int index = 
-        (((int)(px.x * 255) & 0xFF) << 0) |
-        (((int)(px.y * 255) & 0xFF) << 8) |
-        (((int)(px.z * 255) & 0xFF) << 16) |
-        (((int)(px.w * 255) & 0xFF) << 24);
+    uint index = 
+        (((int)(px.r * 255) & 0xFF) << 0) |
+        (((int)(px.g * 255) & 0xFF) << 8) |
+        (((int)(px.b * 255) & 0xFF) << 16) |
+        (((int)(px.a * 255) & 0xFF) << 24);
 
-    _idaccum[index] = true;
+    if(index != 0xFFFFFFFF) _idaccum[index] = true;
 }
 
 // Accumulate a list of 
