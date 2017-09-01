@@ -256,13 +256,18 @@ public class VisibleTriangleRenderTest : RenderingApproach
         public Color color;
     }
 
-    const int OC_RESOLUTION = 1024;
-    const int MAX_TRIANGLES = 100000;
+    // Render constants
+    const int OC_RESOLUTION = 1024;     // OC Texture Resolution
+    const int OC_RENDER_FRAMES = 5;     // Number of frames to render the OC over
+    const int MAX_TRIANGLES = 350000;   // Number of triangles to render per frame
+
+    // Compute Shader Kernels
+    const int ACCUM_KERNEL = 0;
+    const int MAP_KERNEL = 1;
+
     RenderTexture octex;
     Camera occam;
 
-    const int ACCUM_KERNEL = 0;
-    const int MAP_KERNEL = 1;
     ComputeShader compute;
     ComputeBuffer idaccum, triappend;
 
@@ -270,16 +275,13 @@ public class VisibleTriangleRenderTest : RenderingApproach
     Material mat;
     Material idmat;
 
-    Coroutine routine = null;
+    Coroutine ocRoutine;
 
     public override void Prepare(GameObject model)
     {
-        octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16, RenderTextureFormat.ARGB32);
-        octex.Create();
-
+        // Collect the mesh and attribute buffers
         List<Mesh> meshes = new List<Mesh>();
         List<OtherAttrs> otherattrs = new List<OtherAttrs>();
-
         foreach (var r in model.GetComponentsInChildren<Renderer>())
         {
             MeshFilter mf = r.GetComponent<MeshFilter>();
@@ -299,7 +301,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
         idaccum = new ComputeBuffer(attrbuff.count / 3, Marshal.SizeOf(typeof(bool)));
         triappend = new ComputeBuffer(MAX_TRIANGLES, Marshal.SizeOf(typeof(uint)), ComputeBufferType.Append);
 
-        // Compute Shader
+        // Compute Shader & Buffers
         compute = Resources.Load<ComputeShader>("Shaders/compute/countTris");
         
         compute.SetBuffer(ACCUM_KERNEL, "_idaccum", idaccum);
@@ -318,15 +320,18 @@ public class VisibleTriangleRenderTest : RenderingApproach
         idmat.SetBuffer("other", otherbuff);
         idmat.SetBuffer("points", attrbuff);
         
+        // OC camera and rendertexture
         occam = new GameObject("OC CAM").AddComponent<Camera>();
         occam.targetTexture = octex;
         occam.enabled = false;
+        octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16, RenderTextureFormat.ARGB32);
+        octex.Create();
     }
 
     public override void SetEnabled(bool enabled)
     {
-        if (enabled) routine = StaticCoroutine.StaticStartCoroutine(GatherTriangles());
-        else StaticCoroutine.StaticStopCoroutine(routine);
+        if (enabled) ocRoutine = StaticCoroutine.StaticStartCoroutine(GatherTriangles());
+        else StaticCoroutine.StaticStopCoroutine(ocRoutine);
     }
 
     IEnumerator GatherTriangles()
@@ -338,7 +343,6 @@ public class VisibleTriangleRenderTest : RenderingApproach
         // every triangle id 1024^2 = 1048576, so models
         // will less geometry are more expensive to iterate over
         // The data may be more expensive to transfer, though
-        // TODO: Use shorts or something smaller
         // TODO: There's a triangle marked as id "0" which will never
         // be drawn because we don't add the 0 index to the triangle
         // array because it's the background color. We should 1-index
@@ -351,7 +355,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
             occam.targetTexture = octex;
 
             int totaltris = attrbuff.count / 3;
-            int trisperframe = totaltris / 5;
+            int trisperframe = totaltris / OC_RENDER_FRAMES;
             for (int i = 0; i < totaltris; i += trisperframe)
             {
                 RenderTexture prev = RenderTexture.active;
