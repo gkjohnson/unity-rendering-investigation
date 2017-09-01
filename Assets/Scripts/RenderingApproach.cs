@@ -344,10 +344,8 @@ public class VisibleTriangleRenderTest : RenderingApproach
         // every triangle id 1024^2 = 1048576, so models
         // will less geometry are more expensive to iterate over
         // The data may be more expensive to transfer, though
-        // TODO: There's a triangle marked as id "0" which will never
-        // be drawn because we don't add the 0 index to the triangle
-        // array because it's the background color. We should 1-index
-        // the triangles or make the background white with full alpha
+        // TODO: Could use a triangle idex to save on attribute buffer memory
+        // TODO: Could use predictive positioning with the camera
         while (true)
         {
             // Render the OC frame
@@ -355,10 +353,14 @@ public class VisibleTriangleRenderTest : RenderingApproach
             occam.fieldOfView *= OC_FOV_RATIO;
             occam.targetTexture = octex;
 
+            // Render over several frames
             int totaltris = attrbuff.count / 3;
             int trisperframe = totaltris / OC_RENDER_FRAMES;
             for (int i = 0; i < totaltris; i += trisperframe)
             {
+                // Set the oc texture to active and clear it
+                // with an id-color that doesn't clash with a
+                // triangle id
                 RenderTexture prev = RenderTexture.active;
                 RenderTexture.active = octex;
                 if (i == 0)
@@ -366,6 +368,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
                     GL.Clear(true, true, new Color32(0xFF, 0xFF, 0xFF, 0xFF));
                 }
 
+                // Draw the set number of triangles
                 GL.PushMatrix();
                 GL.LoadIdentity();
                 GL.modelview = occam.worldToCameraMatrix;
