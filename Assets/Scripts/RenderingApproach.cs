@@ -297,7 +297,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
         otherbuff.SetData(otherattrs.ToArray());
 
         // Compute Shader Buffers
-        idaccum = new ComputeBuffer(attrbuff.count / 3, Marshal.SizeOf(typeof(int)));
+        idaccum = new ComputeBuffer(attrbuff.count / 3, Marshal.SizeOf(typeof(bool)));
         triappend = new ComputeBuffer(MAX_TRIANGLES, Marshal.SizeOf(typeof(uint)), ComputeBufferType.Append);
 
         // Compute Shader

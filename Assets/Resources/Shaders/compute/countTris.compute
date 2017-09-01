@@ -3,7 +3,7 @@
 #pragma kernel MapTris
 
 Texture2D<float4> _idTex;
-RWStructuredBuffer<int> _idaccum;
+RWStructuredBuffer<bool> _idaccum;
 AppendStructuredBuffer<uint> _triappend;
 
 // kernel to increment / count the triangles ids in the
@@ -18,25 +18,25 @@ void AccumulateTriangles(uint3 id : SV_DispatchThreadID)
         (((int)(px.z * 255) & 0xFF) << 16) |
         (((int)(px.w * 255) & 0xFF) << 24);
 
-    _idaccum[index] = 1;
+    _idaccum[index] = true;
 }
 
 // kernel to quickly clear / reset the above buffer to 0 / false
 [numthreads(1, 1, 1)]
 void ClearAccum(uint3 id : SV_DispatchThreadID)
 {
-    uint index = id.x + id.y + id.z;
-    _idaccum[index] = 0;
+    uint index = id.x; // + id.y + id.z;
+    _idaccum[index] = false;
 }
 
 // Accumulate a list of 
 [numthreads(1, 1, 1)]
 void MapTris(uint3 id : SV_DispatchThreadID)
 {
-    uint index = id.x;// +id.y + id.z;
-    int val = _idaccum[index];
+    uint index = id.x; // + id.y + id.z;
+    bool val = _idaccum[index];
 
-    if (val != 0) _triappend.Append(id.x);
+    if (val) _triappend.Append(id.x);
 
-    _idaccum[index] = 0;
+    _idaccum[index] = false;
 }
