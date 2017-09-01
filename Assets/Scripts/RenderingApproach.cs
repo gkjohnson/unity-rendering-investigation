@@ -331,8 +331,8 @@ public class VisibleTriangleRenderTest : RenderingApproach
 
     public override void SetEnabled(bool enabled)
     {
-        if (enabled) ocRoutine = StaticCoroutine.StaticStartCoroutine(GatherTriangles());
-        else StaticCoroutine.StaticStopCoroutine(ocRoutine);
+        if (enabled) ocRoutine = StaticCoroutine.Start(GatherTriangles());
+        else StaticCoroutine.Stop(ocRoutine);
     }
 
     IEnumerator GatherTriangles()
