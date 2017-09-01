@@ -266,8 +266,6 @@ public class VisibleTriangleRenderTest : RenderingApproach
     const int MAP_KERNEL = 2;
     ComputeShader compute;
     ComputeBuffer idaccum, triappend;
-    int[] accumarr;
-    int nextTriIndex = 0;
 
     ComputeBuffer attrbuff, otherbuff;
     Material mat;
@@ -301,7 +299,6 @@ public class VisibleTriangleRenderTest : RenderingApproach
         // Compute Shader Buffers
         idaccum = new ComputeBuffer(attrbuff.count / 3, Marshal.SizeOf(typeof(int)));
         triappend = new ComputeBuffer(MAX_TRIANGLES, Marshal.SizeOf(typeof(uint)), ComputeBufferType.Append);
-        accumarr = new int[attrbuff.count / 3];
 
         // Compute Shader
         compute = Resources.Load<ComputeShader>("Shaders/compute/countTris");
