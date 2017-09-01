@@ -262,8 +262,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
     Camera occam;
 
     const int ACCUM_KERNEL = 0;
-    const int CLEAR_KERNEL = 1;
-    const int MAP_KERNEL = 2;
+    const int MAP_KERNEL = 1;
     ComputeShader compute;
     ComputeBuffer idaccum, triappend;
 
@@ -306,12 +305,8 @@ public class VisibleTriangleRenderTest : RenderingApproach
         compute.SetBuffer(ACCUM_KERNEL, "_idaccum", idaccum);
         compute.SetTexture(ACCUM_KERNEL, "_idTex", octex);
 
-        compute.SetBuffer(CLEAR_KERNEL, "_idaccum", idaccum);
-
         compute.SetBuffer(MAP_KERNEL, "_idaccum", idaccum);
         compute.SetBuffer(MAP_KERNEL, "_triappend", triappend);
-
-        compute.Dispatch(CLEAR_KERNEL, idaccum.count, 1, 1);
         
         // Material
         mat = new Material(Shader.Find("Indirect Shader Single Call"));
