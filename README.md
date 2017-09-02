@@ -47,8 +47,8 @@ Runs an occlusion pass, counts the triangles, generates an array of visible tria
 
 ### Details
 Requires a few compute shader and prepasses to run. These passes can be done over multiple frames:
-- Render whole model to buffer
-- Clear the "visible" array (this can possibly happen in the append buffer pass)
+- Render whole model to renderTexture
+- Clear the "visible" array
 - Mark triangles as "visible" in a buffer with a compute shader pass
 - Write the triangle ids needed to an append buffer in a compute shader pass
 
