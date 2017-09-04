@@ -384,6 +384,11 @@ public class VisibleTriangleRenderTest : RenderingApproach
                 if ( i + trisperframe < totaltris) yield return null;
             }
 
+            // NOTE
+            // It's possible that this yield may
+            // not be necessary -- the compute shaders
+            // seem to run fairly quickly and
+            // can just be run after the previous draw
             yield return null;
 
             // accumulate the ids
