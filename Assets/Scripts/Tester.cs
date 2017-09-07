@@ -25,12 +25,12 @@ public class Tester : MonoBehaviour {
     float frametime = 0;
 
 	void Start () {
-        approaches[Approach.DRAW_MESH]                  = new DrawMeshTest();
-        approaches[Approach.DRAW_MESH_PROP_BLOCK]       = new DrawMeshWithPropBlockTest();
-        approaches[Approach.DRAW_PROCEDURAL]            = new DrawProceduralTest();
-        approaches[Approach.UNPACKED_DRAW_PROCEDURAL]   = new UnpackedDrawProceduralTest();
+        //approaches[Approach.DRAW_MESH]                  = new DrawMeshTest();
+        //approaches[Approach.DRAW_MESH_PROP_BLOCK]       = new DrawMeshWithPropBlockTest();
+        //approaches[Approach.DRAW_PROCEDURAL]            = new DrawProceduralTest();
+        //approaches[Approach.UNPACKED_DRAW_PROCEDURAL]   = new UnpackedDrawProceduralTest();
         approaches[Approach.VISIBLE_TRIANGLES]          = new VisibleTriangleRenderTest();
-        approaches[Approach.UNITY_RENDERER]             = new RendererTest();
+        // approaches[Approach.UNITY_RENDERER]             = new RendererTest();
 
         foreach (var kv in approaches) kv.Value.Prepare(testObj);
 	}
@@ -62,9 +62,14 @@ public class Tester : MonoBehaviour {
         }
     }
 
+    private void LateUpdate()
+    {
+        if (curr != null) curr.LateUpdate(Camera.main, transform);
+    }
+
     void OnRenderObject()
     {
-        if (curr != null) curr.Render(Camera.main, transform);
+        if (curr != null) curr.OnRenderObject(Camera.current, transform);
     }
 
     private void OnDestroy()

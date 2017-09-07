@@ -7,7 +7,8 @@ public abstract class RenderingApproach
 {
     virtual public void Prepare(GameObject model) { }
     virtual public void SetEnabled(bool enabled) { }
-    virtual public void Render(Camera cam = null, Transform root = null) { }
+    virtual public void OnRenderObject(Camera cam = null, Transform root = null) { }
+    virtual public void LateUpdate(Camera cam = null, Transform root = null) { }
     virtual public void Dispose() { }
     virtual public void OnGUI() { }
 }
@@ -91,12 +92,12 @@ public class DrawMeshTest : RenderingApproach
         _drawArray = drawList.ToArray();
     }
 
-    public override void Render(Camera cam = null, Transform root = null)
+    public override void LateUpdate(Camera cam = null, Transform root = null)
     {
         for(int i = 0; i < _drawArray.Length; i++)
         {
             DrawSet ds = _drawArray[i];
-            Graphics.DrawMesh(ds.mesh, ds.localMat, ds.material, 0);
+            Graphics.DrawMesh(ds.mesh, root.localToWorldMatrix * ds.localMat, ds.material, 0);
         }
     }
 }
@@ -139,12 +140,13 @@ public class DrawMeshWithPropBlockTest : RenderingApproach
         _drawArray = drawList.ToArray();
     }
 
-    public override void Render(Camera cam = null, Transform root = null)
+    public override void LateUpdate(Camera cam = null, Transform root = null)
     {
+        Debug.Log(cam);
         for (int i = 0; i < _drawArray.Length; i++)
         {
             DrawSet ds = _drawArray[i];
-            Graphics.DrawMesh(ds.mesh, ds.localMat, _mat, 0, null, 0, ds.propBlock);
+            Graphics.DrawMesh(ds.mesh, root.localToWorldMatrix * ds.localMat, _mat, 0, cam, 0, ds.propBlock);
         }
     }
 }
@@ -206,13 +208,13 @@ public class DrawProceduralTest : RenderingApproach
         drawArray = drawList.ToArray();
     }
 
-    public override void Render(Camera cam = null, Transform root = null)
+    public override void OnRenderObject(Camera cam = null, Transform root = null)
     {
         for (int i = 0; i < drawArray.Length; i++)
         {
             DrawSet ds = drawArray[i];
             GL.PushMatrix();
-            GL.MultMatrix(ds.localMat);
+            GL.MultMatrix(root.localToWorldMatrix * ds.localMat);
             ds.material.SetPass(0);
             Graphics.DrawProcedural(MeshTopology.Triangles, ds.count, 1);
             GL.PopMatrix();
@@ -277,6 +279,8 @@ public class VisibleTriangleRenderTest : RenderingApproach
     Material idmat;
 
     Coroutine ocRoutine;
+
+    Transform root;
 
     public override void Prepare(GameObject model)
     {
@@ -348,6 +352,10 @@ public class VisibleTriangleRenderTest : RenderingApproach
         // TODO: Could use predictive positioning with the camera
         while (true)
         {
+            while (this.root == null) yield return null;
+
+            Transform root = this.root;
+            
             // Render the OC frame
             occam.CopyFrom(Camera.main);
             occam.fieldOfView *= OC_FOV_RATIO;
@@ -373,7 +381,7 @@ public class VisibleTriangleRenderTest : RenderingApproach
                 GL.LoadIdentity();
                 GL.modelview = occam.worldToCameraMatrix;
                 GL.LoadProjectionMatrix(occam.projectionMatrix);
-
+                GL.MultMatrix(root.localToWorldMatrix);
                 idmat.SetInt("idOffset", i * 3);
                 idmat.SetPass(0);
                 Graphics.DrawProcedural(MeshTopology.Triangles, trisperframe * 3, 1);
@@ -400,12 +408,16 @@ public class VisibleTriangleRenderTest : RenderingApproach
         }
     }
     
-    public override void Render(Camera cam = null, Transform root = null)
+    public override void OnRenderObject(Camera cam = null, Transform root = null)
     {
+        this.root = root;
         if (Camera.main != cam) return;
 
+        GL.PushMatrix();
+        GL.MultMatrix(root.localToWorldMatrix);
         mat.SetPass(0);
         Graphics.DrawProcedural(MeshTopology.Triangles, MAX_TRIANGLES * 3, 1);
+        GL.PopMatrix();
     }
 
     public override void Dispose()
