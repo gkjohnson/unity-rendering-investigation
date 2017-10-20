@@ -285,12 +285,13 @@ public class VisibleTriangleRenderTest : RenderingApproach
     public override void Prepare(GameObject model)
     {
         // OC camera and rendertexture
+        octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16, RenderTextureFormat.ARGB32);
+        octex.enableRandomWrite = true;
+        octex.Create();
         occam = new GameObject("OC CAM").AddComponent<Camera>();
         occam.targetTexture = octex;
         occam.enabled = false;
-        octex = new RenderTexture(OC_RESOLUTION, OC_RESOLUTION, 16, RenderTextureFormat.ARGB32);
-        octex.Create();
-
+        
         // Collect the mesh and attribute buffers
         List<Mesh> meshes = new List<Mesh>();
         List<OtherAttrs> otherattrs = new List<OtherAttrs>();
